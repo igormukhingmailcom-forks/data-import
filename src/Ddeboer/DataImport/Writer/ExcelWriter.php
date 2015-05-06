@@ -36,6 +36,8 @@ class ExcelWriter extends AbstractWriter
      */
     protected $row = 1;
 
+    protected $prependHeaderRow;
+
     /**
      * Constructor
      *
@@ -44,11 +46,13 @@ class ExcelWriter extends AbstractWriter
      * @param string         $type  Excel file type (optional, defaults to
      *                              Excel2007)
      */
-    public function __construct(\SplFileObject $file, $sheet = null, $type = 'Excel2007')
+    public function __construct(\SplFileObject $file, $sheet = null, $type = 'Excel2007', $prependHeaderRow = false)
     {
         $this->filename = $file->getPathname();
         $this->sheet = $sheet;
         $this->type = $type;
+
+        $this->prependHeaderRow = $prependHeaderRow;
     }
 
     /**
@@ -79,6 +83,15 @@ class ExcelWriter extends AbstractWriter
     public function writeItem(array $item)
     {
         $count = count($item);
+        if ($this->prependHeaderRow && 1 == $this->row) {
+            $headers = array_keys($item);
+
+            for ($i = 0; $i < $count; $i++) {
+                $this->excel->getActiveSheet()->setCellValueByColumnAndRow($i, $this->row, $headers[$i]);
+            }
+            $this->row++;
+        }
+        
         $values = array_values($item);
 
         for ($i = 0; $i < $count; $i++) {
